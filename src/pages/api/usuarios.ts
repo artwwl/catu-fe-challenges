@@ -37,8 +37,8 @@ const requestHandler = (req: NextApiRequest, res: NextApiResponse) => {
               ? 1
               : -1
             : a[`${orderBy}`] > b[`${orderBy}`]
-            ? -1
-            : 1;
+              ? -1
+              : 1;
         case 'age':
           return order === 'asc' ? a.age - b.age : b.age - a.age;
         default:
@@ -63,7 +63,7 @@ const requestHandler = (req: NextApiRequest, res: NextApiResponse) => {
       return true;
     });
 
-  const resultsData = userData.splice(sliceStart, sliceEnd);
+  const resultsData = userData.slice(sliceStart, sliceEnd);
 
   if (filterBy !== null && filterValue !== null && resultsData?.length === 0) {
     res.status(404).json({

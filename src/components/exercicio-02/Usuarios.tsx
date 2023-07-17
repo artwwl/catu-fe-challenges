@@ -1,4 +1,6 @@
-import { Box, Chip, Grid, Typography } from '@mui/material';
+import { Chip, Grid, Typography } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useEffect, useState } from 'react';
 import DataTable, { DataTableColumn } from '../elements/DataTable';
 import {
@@ -6,19 +8,88 @@ import {
   MaleTwoTone,
   FemaleTwoTone
 } from '@mui/icons-material';
+import styles from "./Usuarios.module.scss";
+import Form from './Form';
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState<Array<any>>([]);
+  const [query, setQuery] = useState<any>({ 'page_size': 10 });
+  const [currentSortableName, setCurrentSortableName] = useState<string | undefined>(undefined);
+  const [page, setPage] = useState<number>(1);
+  const [maxPage, setMaxPage] = useState<number>(NaN);
 
-  function fetchUsuarios() {
-    fetch('/api/usuarios')
+  function nextPage() {
+    setPage((prevPage) => {
+      const newPage = prevPage + 1;
+      setQuery((prevQuery: any) => ({
+        ...prevQuery,
+        page: newPage
+      }));
+      return newPage;
+    });
+  }
+
+  function handleFormSubmit(filterValue: string, filterBy: string) {
+    setPage(1);
+    setQuery((prevQuery: any) => ({
+      ...prevQuery,
+      page: 1,
+      'filter_by': filterBy,
+      'filter': filterValue
+    }));
+  }
+
+  function previousPage() {
+    setPage((prevPage) => {
+      const newPage = prevPage - 1;
+      setQuery((prevQuery: any) => ({
+        ...prevQuery,
+        page: newPage
+      }));
+      return newPage;
+    });
+  }
+
+  function handleSort(sortableName: string | undefined) {
+    let order = 'asc';
+    if (sortableName === currentSortableName)
+      order = query?.order === 'asc' ? 'desc' : 'asc';
+
+    setCurrentSortableName(sortableName);
+
+    setQuery((prevQuery: any) => {
+      return {
+        ...prevQuery,
+        ["order_by"]: sortableName,
+        ["order"]: order
+      };
+    });
+  }
+
+  function stringifyObject(obj: Record<string, string>): string {
+    return Object.entries(obj)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+  }
+
+  function fetchUsuarios(params?: string) {
+    const baseUrl = '/api/usuarios';
+    const fullUrl = params ? `${baseUrl}?${params}` : baseUrl;
+
+    fetch(fullUrl)
       .then((res) => res.json())
-      .then((data) => setUsuarios(data?.results || []));
+      .then((data) => {
+        setUsuarios(data?.results || [])
+
+        const currentMaxPage = Math.ceil(data.total_results / 10);
+        setMaxPage(currentMaxPage);
+      });
   }
 
   useEffect(() => {
-    fetchUsuarios();
-  }, []);
+    const stringQuery = stringifyObject(query);
+    fetchUsuarios(stringQuery);
+  }, [query, page]);
 
   const columns: Array<DataTableColumn> = [
     {
@@ -34,6 +105,8 @@ const Usuarios = () => {
     {
       title: 'Nome',
       render: (data) => <Typography>{data.name}</Typography>,
+      sortable: true,
+      sortableName: 'name',
       config: {
         width: 200,
         align: 'center'
@@ -42,6 +115,8 @@ const Usuarios = () => {
     {
       title: 'Sobrenome',
       render: (data) => <Typography>{data.surname}</Typography>,
+      sortable: true,
+      sortableName: 'surname',
       config: {
         width: 200,
         align: 'center'
@@ -50,6 +125,8 @@ const Usuarios = () => {
     {
       title: 'Idade',
       render: (data) => <Typography>{data.age}</Typography>,
+      sortable: true,
+      sortableName: 'age',
       config: {
         width: 80,
         align: 'center'
@@ -70,6 +147,8 @@ const Usuarios = () => {
           </Typography>
         );
       },
+      sortable: true,
+      sortableName: 'birthday',
       config: {
         width: 200,
         align: 'center'
@@ -133,6 +212,7 @@ const Usuarios = () => {
 
   return (
     <>
+      <Form onSubmit={handleFormSubmit} />
       <Grid container spacing={2}>
         <Grid item xs={12} sx={{ overflowX: 'auto' }}>
           {usuarios?.length === 0 && <Typography>Nenhum usuário</Typography>}
@@ -142,15 +222,31 @@ const Usuarios = () => {
               sx={{ width: 'max-content' }}
               columns={columns}
               data={usuarios}
-              onSort={(sortableName) => {
-                // 🤔
-              }}
+              onSort={(sortableName) => handleSort(sortableName)}
               sortBy={'id'}
               sortOrder={'asc'}
             />
           )}
         </Grid>
       </Grid>
+      <div className={styles.pagination}>
+        <button
+          className={styles.button}
+          onClick={previousPage}
+          disabled={page === 1}
+        >
+          <ArrowBackIcon sx={{ fontSize: 18 }}></ArrowBackIcon>
+        </button>
+
+        <p>Página: {page}/{maxPage}</p>
+        <button
+          className={styles.button}
+          onClick={nextPage}
+          disabled={page === maxPage}
+        >
+          <ArrowForwardIcon sx={{ fontSize: 18 }}></ArrowForwardIcon>
+        </button>
+      </div>
     </>
   );
 };
