@@ -15,7 +15,7 @@ function Form({ onSubmit }: { onSubmit: (filterValue: string, filterBy: string) 
     <form onSubmit={handleSubmit}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <TextField
-          label="Filter"
+          label="Filtro"
           rows={3}
           variant="outlined"
           autoComplete='off'
