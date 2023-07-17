@@ -38,9 +38,9 @@ const Usuarios = () => {
         setQuery((prevQuery: any) => ({
           ...prevQuery,
           page: 1,
-          'page_size': maxPageSize
+          'page_size': maxPageSize < 10 ? maxPageSize : 10
         }));
-        return maxPageSize;
+        return maxPageSize < 10 ? maxPageSize : 10;
       });
 
       event.target.value = '1';
