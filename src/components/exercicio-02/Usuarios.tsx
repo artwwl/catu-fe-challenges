@@ -1,4 +1,4 @@
-import { Chip, Grid, Typography } from '@mui/material';
+import { Chip, FormControl, Grid, InputLabel, TextField, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useEffect, useState } from 'react';
@@ -13,10 +13,39 @@ import Form from './Form';
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState<Array<any>>([]);
-  const [query, setQuery] = useState<any>({ 'page_size': 10 });
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [query, setQuery] = useState<any>({});
   const [currentSortableName, setCurrentSortableName] = useState<string | undefined>(undefined);
   const [page, setPage] = useState<number>(1);
   const [maxPage, setMaxPage] = useState<number>(NaN);
+  const [maxPageSize, setMaxPageSize] = useState<number>(NaN);
+
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value;
+    const parsedValue = parseInt(value);
+
+    if (!(value === '' || isNaN(parsedValue) || parsedValue < 1 || parsedValue > maxPageSize)) {
+      setPageSize(() => {
+        setQuery((prevQuery: any) => ({
+          ...prevQuery,
+          page: 1,
+          'page_size': parsedValue
+        }));
+        return parsedValue;
+      });
+    } else {
+      setPageSize(() => {
+        setQuery((prevQuery: any) => ({
+          ...prevQuery,
+          page: 1,
+          'page_size': 10
+        }));
+        return 10;
+      });
+
+      event.target.value = '1';
+    }
+  }
 
   function nextPage() {
     setPage((prevPage) => {
@@ -81,8 +110,9 @@ const Usuarios = () => {
       .then((data) => {
         setUsuarios(data?.results || [])
 
-        const currentMaxPage = Math.ceil(data.total_results / 10);
+        const currentMaxPage = Math.ceil(data.total_results / pageSize);
         setMaxPage(currentMaxPage);
+        setMaxPageSize(data.total_results);
       });
   }
 
@@ -246,6 +276,20 @@ const Usuarios = () => {
         >
           <ArrowForwardIcon sx={{ fontSize: 18 }}></ArrowForwardIcon>
         </button>
+
+        <FormControl sx={{ minWidth: 200 }}>
+          <TextField
+            label="Itens por página"
+            type="number"
+            inputProps={{
+              min: 1,
+              max: maxPageSize,
+              step: 1,
+            }}
+            value={pageSize}
+            onChange={handleChange}
+          />
+        </FormControl>
       </div>
     </>
   );
