@@ -110,7 +110,8 @@ const Usuarios = () => {
       .then((data) => {
         setUsuarios(data?.results || [])
 
-        const currentMaxPage = Math.ceil(data.total_results / pageSize);
+
+        const currentMaxPage = !isNaN(parseInt(data.total_results)) ? Math.ceil(data.total_results / pageSize) : 1;
         setMaxPage(currentMaxPage);
         setMaxPageSize(data.total_results);
       });
